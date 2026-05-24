@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DC Universe RPG Character Sheet v2.0</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); padding: 20px; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .header { text-align: center; border-bottom: 3px solid #1e3c72; padding-bottom: 15px; margin-bottom: 30px; }
+        .header h1 { color: #1e3c72; font-size: 2.5em; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
+        .header p { color: #666; font-style: italic; }
+        .section { margin-bottom: 30px; border: 2px solid #ddd; border-radius: 8px; padding: 20px; background: #f9f9f9; }
+        .section-title { background: #1e3c72; color: white; padding: 10px 15px; margin: -20px -20px 20px -20px; border-radius: 6px 6px 0 0; font-size: 1.3em; font-weight: bold; text-transform: uppercase; }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-weight: bold; margin-bottom: 5px; color: #1e3c72; font-size: 0.9em; text-transform: uppercase; }
+        .form-group input, .form-group textarea { padding: 8px; border: 2px solid #ddd; border-radius: 4px; font-size: 1em; transition: border-color 0.3s; font-family: inherit; }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #1e3c72; background: #f0f7ff; }
+        .form-group input.stat-field { text-align: center; font-weight: bold; font-size: 1.1em; }
+        textarea { resize: vertical; min-height: 60px; }
+        .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+        .skill-category { background: white; padding: 15px; border-radius: 6px; border: 1px solid #ddd; }
+        .skill-item { display: grid; grid-template-columns: 1fr 60px; gap: 10px; margin-bottom: 8px; align-items: center; }
+        .skill-item label { font-size: 0.85em; color: #333; }
+        .skill-item input { padding: 5px; text-align: center; border: 2px solid #ddd; border-radius: 4px; font-family: inherit; }
+        .skill-block { margin-bottom: 8px; }
+        .skill-specializations { margin-left: 20px; margin-top: 4px; margin-bottom: 4px; }
+        .skill-spec { display: grid; grid-template-columns: 1fr 60px 24px; gap: 10px; margin-bottom: 8px; align-items: center; }
+        .skill-spec input { padding: 5px; border: 2px solid #ddd; border-radius: 4px; font-family: inherit; font-style: italic; }
+        .skill-spec input[data-spec="name"] { text-align: left; font-size: 0.85em; }
+        .skill-spec input[data-spec="value"] { text-align: center; font-size: 0.85em; }
+        .add-spec-btn { font-size: 0.8em; color: #1e3c72; background: none; border: 1px dashed #1e3c72; border-radius: 4px; padding: 4px 10px; cursor: pointer; margin-top: 2px; font-weight: normal; text-transform: none; }
+        .add-spec-btn:hover { background: #f0f7ff; }
+        .remove-spec-btn { background: #dc3545; color: white; border: none; border-radius: 3px; width: 22px; height: 22px; cursor: pointer; font-size: 12px; line-height: 1; padding: 0; font-weight: normal; text-transform: none; }
+        .combat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+        .powers-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .powers-table th { background: #1e3c72; color: white; padding: 10px; text-align: left; font-size: 0.9em; }
+        .powers-table td { padding: 8px; border: 1px solid #ddd; }
+        .powers-table input { width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 3px; font-family: inherit; }
+        .buttons { display: flex; gap: 15px; justify-content: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #ddd; flex-wrap: wrap; }
+        button { padding: 12px 30px; font-size: 1.1em; border: none; border-radius: 6px; cursor: pointer; transition: all 0.3s; text-transform: uppercase; font-weight: bold; font-family: inherit; }
+        .btn-save  { background: #28a745; color: white; }
+        .btn-save:hover  { background: #218838; transform: translateY(-2px); }
+        .btn-load  { background: #007bff; color: white; }
+        .btn-load:hover  { background: #0056b3; transform: translateY(-2px); }
+        .btn-clear { background: #dc3545; color: white; }
+        .btn-clear:hover { background: #c82333; transform: translateY(-2px); }
+        .btn-print { background: #6c757d; color: white; }
+        .btn-print:hover { background: #545b62; transform: translateY(-2px); }
+
+        /* Advantages / Disadvantages */
+        .advdis-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 700px) { .advdis-columns { grid-template-columns: 1fr; } }
+        .advdis-col h3 { font-size: 1em; font-weight: bold; color: #1e3c72; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid #1e3c72; }
+        .advdis-col.disadvantages h3 { color: #c0392b; border-bottom-color: #c0392b; }
+        .advdis-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+        .advdis-entry { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; }
+        .advdis-entry.advantage    { border-left: 4px solid #28a745; }
+        .advdis-entry.disadvantage { border-left: 4px solid #c0392b; }
+        .advdis-entry-top { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 6px; }
+        .advdis-name { border: none !important; border-bottom: 1px solid #ccc !important; border-radius: 0 !important; padding: 4px 2px !important; font-size: 0.95em !important; font-weight: bold; color: #222; background: transparent !important; width: 100%; font-family: inherit; }
+        .advdis-name:focus { outline: none; border-bottom-color: #1e3c72 !important; background: transparent !important; }
+        .advdis-toggle { font-size: 0.75em; color: #888; background: none; border: 1px dashed #ccc; border-radius: 4px; padding: 2px 7px; cursor: pointer; white-space: nowrap; text-transform: none; font-weight: normal; font-family: inherit; }
+        .advdis-toggle:hover { background: #f0f0f0; color: #333; }
+        .advdis-remove { background: none; border: none; color: #ccc; cursor: pointer; font-size: 1.1em; padding: 0 2px; line-height: 1; text-transform: none; font-weight: normal; }
+        .advdis-remove:hover { color: #dc3545; }
+        .advdis-desc { display: none; }
+        .advdis-desc.open { display: block; }
+        .advdis-desc textarea { width: 100%; min-height: 50px; font-size: 0.85em; border: 1px solid #ddd !important; border-radius: 4px; padding: 5px 7px; resize: vertical; font-family: inherit; color: #444; background: #fafafa; }
+        .advdis-desc textarea:focus { outline: none; border-color: #1e3c72 !important; background: #f0f7ff; }
+        .add-advdis-btn { font-size: 0.85em; color: #1e3c72; background: none; border: 1px dashed #1e3c72; border-radius: 4px; padding: 6px 12px; cursor: pointer; width: 100%; text-transform: none; font-weight: normal; font-family: inherit; }
+        .add-advdis-btn:hover { background: #f0f7ff; }
+        .advdis-col.disadvantages .add-advdis-btn { color: #c0392b; border-color: #c0392b; }
+        .advdis-col.disadvantages .add-advdis-btn:hover { background: #fff0f0; }
+
+        /* Maneuver Reference */
+        .maneuver-ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+        .maneuver-card { background: white; border: 1px solid #ddd; border-left: 4px solid #1e3c72; border-radius: 6px; padding: 12px 14px; }
+        .maneuver-card h3 { color: #1e3c72; font-size: 0.95em; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .maneuver-card textarea { width: 100%; border: 1px solid #ddd; border-radius: 4px; padding: 6px 8px; font-size: 0.85em; font-family: inherit; color: #333; resize: vertical; min-height: 70px; transition: border-color 0.2s; }
+        .maneuver-card textarea:focus { outline: none; border-color: #1e3c72; background: #f0f7ff; }
+        .print-proxy { display: none; }
+        @media print {
+            .maneuver-ref-grid { grid-template-columns: 1fr 1fr !important; gap: 6pt !important; }
+            .maneuver-card { border-left: 3pt solid #1e3c72 !important; padding: 4pt 6pt !important; break-inside: avoid; }
+            .maneuver-card h3 { font-size: 7pt !important; margin-bottom: 2pt !important; }
+            .maneuver-card .print-proxy { font-size: 6.5pt !important; border-bottom: none !important; }
+        }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 9999; align-items: center; justify-content: center; padding: 16px; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: white; border-radius: 12px; padding: 24px; width: 100%; max-width: 520px; max-height: 90vh; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 8px 40px rgba(0,0,0,0.5); overflow-y: auto; }
+        .modal-box h2 { color: #1e3c72; font-size: 1.2em; text-transform: uppercase; }
+        .modal-box p { font-size: 0.92em; color: #444; line-height: 1.6; }
+        .modal-box ol { padding-left: 20px; font-size: 0.92em; color: #444; line-height: 2.1; }
+        .modal-box textarea.json-area { width: 100%; height: 180px; font-family: monospace; font-size: 0.78em; border: 2px solid #1e3c72; border-radius: 6px; padding: 10px; resize: vertical; background: #f8f9fa; }
+        .modal-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+        .modal-buttons button { flex: 1; padding: 11px 10px; font-size: 0.95em; min-width: 110px; }
+        .btn-mblue  { background: #1e3c72; color: white; }
+        .btn-mblue:hover { background: #162d56; }
+        .btn-mgray  { background: #6c757d; color: white; }
+        .btn-mgray:hover { background: #545b62; }
+        .btn-mgreen { background: #28a745; color: white; }
+        .btn-mgreen:hover { background: #218838; }
+        .copy-ok { display: none; color: #28a745; font-weight: bold; font-size: 0.9em; text-align: center; }
+        .tip-box { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 14px 16px; }
+        .tip-box p, .tip-box ol { color: #856404; }
+
+        /* Print */
+        @media print {
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
+
+            @page { size: letter; margin: 0.45in 0.4in; }
+
+            body {
+                background: white !important;
+                padding: 0 !important;
+                font-size: 8.5pt;
+                font-family: Arial, sans-serif;
+                color: #111;
+            }
+
+            .container {
+                max-width: 100% !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                border-radius: 0 !important;
+                background: white !important;
+            }
+
+            /* ── Hide interactive chrome ── */
+            .buttons, .add-power-btn, .modal-overlay,
+            .add-advdis-btn, .advdis-remove, .advdis-toggle,
+            .add-spec-btn, .skill-spec .remove-spec-btn { display: none !important; }
+
+            /* ── Header ── */
+            .header {
+                border-bottom: 2.5pt solid #1e3c72 !important;
+                padding-bottom: 6pt !important;
+                margin-bottom: 10pt !important;
+            }
+            .header h1 {
+                color: #1e3c72 !important;
+                font-size: 16pt !important;
+                letter-spacing: 2px;
+            }
+            .header p { color: #555 !important; font-size: 8pt !important; }
+
+            /* ── Sections ── */
+            .section {
+                break-inside: avoid;
+                margin-bottom: 7pt;
+                border: 1pt solid #1e3c72 !important;
+                border-radius: 0 !important;
+                padding: 5pt !important;
+                background: white !important;
+            }
+            .section-title {
+                background: #1e3c72 !important;
+                color: white !important;
+                border-radius: 0 !important;
+                padding: 3pt 7pt !important;
+                margin: -5pt -5pt 6pt -5pt !important;
+                font-size: 7.5pt !important;
+                letter-spacing: 1px;
+            }
+
+            /* Body points section accent */
+            .body-points-section {
+                background: #eef2fa !important;
+                border: 1.5pt solid #1e3c72 !important;
+            }
+
+            /* ── Form fields ── */
+            .form-row {
+                gap: 5pt !important;
+                margin-bottom: 4pt !important;
+                grid-template-columns: repeat(auto-fit, minmax(80pt, 1fr)) !important;
+            }
+            .form-group label {
+                font-size: 6.5pt !important;
+                margin-bottom: 1pt !important;
+                color: #1e3c72 !important;
+                font-weight: bold;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            .form-group input, .form-group textarea,
+            .skill-item input, .powers-table input {
+                background: white !important;
+                border: none !important;
+                border-bottom: 1pt solid #aaa !important;
+                border-radius: 0 !important;
+                padding: 1pt 2pt !important;
+                font-size: 8pt !important;
+            }
+            .form-group input.stat-field {
+                border: 1pt solid #1e3c72 !important;
+                background: #eef2fa !important;
+                font-weight: bold;
+                font-size: 9pt !important;
+                text-align: center;
+            }
+            /* Hide real textareas in print - replaced by .print-proxy divs */
+            .form-group textarea,
+            .maneuver-card textarea,
+            .advdis-desc textarea {
+                display: none !important;
+            }
+            .print-proxy {
+                display: block !important;
+                min-height: 0 !important;
+                padding: 2pt 3pt !important;
+                font-size: 7.5pt !important;
+                font-family: Arial, sans-serif;
+                color: #333 !important;
+                line-height: 1.4;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                border-bottom: 0.5pt solid #ccc;
+            }
+            /* advdis note proxies sit inside advdis-desc */
+            .advdis-desc .print-proxy {
+                font-size: 6.5pt !important;
+                color: #555 !important;
+                border-bottom: none;
+            }
+
+            /* ── Skills ── */
+            .skills-grid {
+                grid-template-columns: 1fr 1fr 1fr !important;
+                gap: 5pt !important;
+            }
+            .skill-category {
+                break-inside: avoid;
+                padding: 4pt !important;
+                border: 1pt solid #1e3c72 !important;
+                border-radius: 0 !important;
+                background: white !important;
+            }
+            .skill-item {
+                margin-bottom: 1.5pt !important;
+                grid-template-columns: 1fr 32pt !important;
+                gap: 3pt !important;
+            }
+            .skill-item label { font-size: 6.5pt !important; color: #111 !important; }
+            .skill-item input {
+                padding: 1pt 2pt !important;
+                font-size: 7pt !important;
+                border: none !important;
+                border-bottom: 0.5pt solid #aaa !important;
+                text-align: center;
+            }
+            .skill-block { margin-bottom: 3pt !important; }
+            .skill-specializations { margin-left: 10pt !important; }
+            .skill-spec {
+                grid-template-columns: 1fr 32pt !important;
+                margin-bottom: 1pt !important;
+            }
+            .skill-spec input {
+                border: none !important;
+                border-bottom: 0.5pt solid #bbb !important;
+                background: transparent !important;
+                font-size: 6.5pt !important;
+                font-style: italic;
+                color: #333;
+            }
+
+            /* ── Combat ── */
+            .combat-grid {
+                break-inside: avoid;
+                gap: 5pt !important;
+                grid-template-columns: repeat(4, 1fr) !important;
+            }
+            .combat-maneuvers-grid { grid-template-columns: repeat(6, 1fr) !important; }
+            .combat-maneuvers-grid .skill-item label { font-size: 6pt !important; }
+
+            /* ── Powers table ── */
+            .powers-table th {
+                background: #1e3c72 !important;
+                color: white !important;
+                padding: 3pt 4pt !important;
+                font-size: 6.5pt !important;
+            }
+            .powers-table td {
+                border: 0.5pt solid #aaa !important;
+                padding: 2pt 3pt !important;
+            }
+            .powers-table input {
+                border: none !important;
+                font-size: 7pt !important;
+                padding: 0 !important;
+            }
+
+            /* ── Advantages / Disadvantages ── */
+            .advdis-columns { grid-template-columns: 1fr 1fr !important; gap: 10pt !important; }
+            .advdis-col h3 {
+                font-size: 7.5pt !important;
+                margin-bottom: 4pt !important;
+                color: #1e3c72 !important;
+                border-bottom-color: #1e3c72 !important;
+            }
+            .advdis-col.disadvantages h3 { color: #c0392b !important; border-bottom-color: #c0392b !important; }
+            .advdis-list { gap: 3pt !important; }
+            .advdis-entry {
+                padding: 3pt 5pt !important;
+                gap: 2pt !important;
+                break-inside: avoid;
+                border: 0.5pt solid #ddd !important;
+            }
+            .advdis-entry.advantage    { border-left: 3pt solid #28a745 !important; }
+            .advdis-entry.disadvantage { border-left: 3pt solid #c0392b !important; }
+            .advdis-name { font-size: 7.5pt !important; }
+            .advdis-desc { display: block !important; }
+        }
+        @media (max-width: 768px) { .container { padding: 15px; } .header h1 { font-size: 1.8em; } .form-row { grid-template-columns: 1fr; } }
+
+        /* ════ DICE ROLLER INTEGRATION ════ */
+        :root {
+            --dcu-yellow: #FFE000;
+            --dcu-red:    #D42B2B;
+            --dcu-wild:   #E8A020;
+            --dcu-ink:    #1a1a2e;
+            --dcu-white:  #F5F0E8;
+            --dcu-ff-d:   'Bangers', 'Impact', 'Arial Black', sans-serif;
+            --dcu-ff-l:   'Oswald', 'Arial Narrow', Arial, sans-serif;
+        }
+        body { padding-bottom: 58px; }
+        .roll-btn {
+            background: #1e3c72; color: #FFE000;
+            border: none; border-radius: 3px;
+            width: 24px; height: 24px;
+            cursor: pointer; font-size: 11px;
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 0; flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.12s;
+            text-transform: none; font-weight: normal;
+        }
+        .roll-btn:hover  { background: #2a5298; transform: none; }
+        .roll-btn:active { background: #D42B2B; transform: scale(0.88); }
+        .skill-item { grid-template-columns: 1fr 60px 26px; gap: 5px; }
+        .skill-spec { grid-template-columns: 1fr 60px 24px 26px; gap: 6px; }
+
+        #dcu-roll-dialog {
+            display: none; position: fixed; inset: 0; z-index: 9000;
+            align-items: center; justify-content: center;
+            background: rgba(10,10,28,0.82); backdrop-filter: blur(4px); padding: 12px;
+        }
+        #dcu-roll-dialog.open { display: flex; }
+        .drd-box {
+            background: var(--dcu-ink); border: 3px solid var(--dcu-yellow); border-radius: 6px;
+            width: min(400px,100%); max-height: 92vh; overflow-y: auto;
+            box-shadow: 0 16px 48px rgba(0,0,0,.75),4px 4px 0 var(--dcu-red);
+            color: var(--dcu-white); position: relative;
+        }
+        .drd-head {
+            background: var(--dcu-yellow); color: var(--dcu-ink);
+            font-family: var(--dcu-ff-d); font-size: 1.35rem; letter-spacing: 3px;
+            padding: 9px 36px 7px 13px; border-bottom: 3px solid var(--dcu-ink);
+        }
+        .drd-head-sub { font-family: var(--dcu-ff-l); font-size: 0.68rem; letter-spacing: 2px; opacity: 0.6; margin-top: 2px; }
+        .drd-x { position:absolute;top:7px;right:9px;background:none;border:none;color:var(--dcu-ink);font-size:1.3rem;cursor:pointer;padding:0 4px;line-height:1;font-family:sans-serif;font-weight:bold;text-transform:none; }
+        .drd-body { padding: 14px; font-family: var(--dcu-ff-l); }
+        .drd-row { display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.1); }
+        .drd-lbl { font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.4);min-width:60px; }
+        .drd-stepper { display:flex;align-items:center;flex:1; }
+        .drd-sb { background:rgba(255,255,255,0.09);color:var(--dcu-white);border:2px solid rgba(255,255,255,0.2);font-family:var(--dcu-ff-d);font-size:1.3rem;width:37px;height:37px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;text-transform:none;font-weight:normal;-webkit-tap-highlight-color:transparent; }
+        .drd-sb:first-child{border-radius:4px 0 0 4px;} .drd-sb:last-child{border-radius:0 4px 4px 0;}
+        .drd-sb:active{background:var(--dcu-yellow);color:var(--dcu-ink);transform:none;box-shadow:none;}
+        .drd-sn{background:#000;border-top:2px solid rgba(255,255,255,0.2);border-bottom:2px solid rgba(255,255,255,0.2);height:37px;flex:1;display:flex;align-items:center;justify-content:center;}
+        .drd-si{background:transparent;border:none;outline:none;color:var(--dcu-white);font-family:var(--dcu-ff-d);font-size:1.4rem;width:100%;text-align:center;-webkit-appearance:none;-moz-appearance:textfield;}
+        .drd-si::-webkit-inner-spin-button,.drd-si::-webkit-outer-spin-button{-webkit-appearance:none;}
+        .drd-sec{font-size:.63rem;letter-spacing:3px;text-transform:uppercase;color:var(--dcu-yellow);margin-bottom:8px;}
+        .drd-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+        .drd-cell{display:flex;flex-direction:column;gap:3px;}
+        .drd-cell label{font-size:.62rem;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.4);font-weight:normal;margin-bottom:0;}
+        .drd-cell input{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:3px;color:var(--dcu-white);font-family:var(--dcu-ff-d);font-size:1.2rem;text-align:center;padding:5px;outline:none;width:100%;-webkit-appearance:none;-moz-appearance:textfield;}
+        .drd-cell input::-webkit-inner-spin-button,.drd-cell input::-webkit-outer-spin-button{-webkit-appearance:none;}
+        .drd-cell input:focus{border-color:var(--dcu-yellow);background:rgba(255,224,0,.06);}
+        .drd-net{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:4px;padding:7px 12px;margin-bottom:12px;}
+        .drd-net-lbl{font-size:.65rem;letter-spacing:2px;color:rgba(255,255,255,.4);text-transform:uppercase;}
+        .drd-net-val{font-family:var(--dcu-ff-d);font-size:1.65rem;color:var(--dcu-yellow);}
+        .drd-roll{width:100%;background:var(--dcu-red);color:var(--dcu-yellow);border:3px solid var(--dcu-yellow);border-radius:4px;font-family:var(--dcu-ff-d);font-size:1.85rem;letter-spacing:4px;padding:10px;cursor:pointer;text-shadow:2px 2px 0 rgba(0,0,0,.4);box-shadow:3px 3px 0 rgba(0,0,0,.4);text-transform:uppercase;transition:none;-webkit-tap-highlight-color:transparent;}
+        .drd-roll:hover{transform:none;box-shadow:3px 3px 0 rgba(0,0,0,.4);}
+        .drd-roll:active{transform:translateY(2px);box-shadow:1px 1px 0 rgba(0,0,0,.4);}
+        .drd-roll.spinning{animation:dcu-pulse .4s ease-in-out;}
+        @keyframes dcu-pulse{0%{transform:scale(1)}30%{transform:scale(.96)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
+
+        #dcu-result{display:none;position:fixed;inset:0;z-index:9100;align-items:center;justify-content:center;background:rgba(5,5,18,.86);backdrop-filter:blur(4px);padding:12px;}
+        #dcu-result.open{display:flex;}
+        .dres-box{background:var(--dcu-ink);border:3px solid var(--dcu-yellow);border-radius:6px;width:min(460px,100%);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.82),5px 5px 0 var(--dcu-red);color:var(--dcu-white);position:relative;}
+        .dres-head{background:var(--dcu-yellow);color:var(--dcu-ink);padding:9px 36px 7px 13px;border-bottom:3px solid var(--dcu-ink);}
+        .dres-title{font-family:var(--dcu-ff-d);font-size:1.25rem;letter-spacing:3px;}
+        .dres-sub{font-family:var(--dcu-ff-l);font-size:.68rem;letter-spacing:1px;opacity:.6;margin-top:2px;}
+        .dres-x{position:absolute;top:7px;right:9px;background:none;border:none;color:var(--dcu-ink);font-size:1.3rem;cursor:pointer;padding:0 4px;font-family:sans-serif;font-weight:bold;text-transform:none;}
+        .dres-body{padding:14px;}
+        .dres-total{text-align:center;margin-bottom:12px;}
+        .dres-num{font-family:var(--dcu-ff-d);font-size:4.2rem;line-height:1;color:var(--dcu-yellow);text-shadow:3px 3px 0 var(--dcu-red),6px 6px 0 rgba(0,0,0,.4);display:block;}
+        .dres-num.xp{color:#FF9900;text-shadow:3px 3px 0 #cc5500,6px 6px 0 rgba(0,0,0,.4);animation:dcu-explode .4s ease;}
+        .dres-num.cf{color:#cc3333;text-shadow:3px 3px 0 #660000,6px 6px 0 rgba(0,0,0,.4);animation:dcu-shake .5s ease;}
+        @keyframes dcu-explode{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+        @keyframes dcu-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+        @keyframes dcu-die{from{transform:scale(0) rotate(-20deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+        .dres-lbl{font-family:var(--dcu-ff-l);font-size:.72rem;letter-spacing:3px;color:rgba(255,255,255,.5);text-transform:uppercase;}
+        .dres-math{font-family:var(--dcu-ff-l);font-size:.76rem;color:rgba(255,255,255,.35);margin-top:3px;letter-spacing:1px;}
+        #dres-badges{margin-top:5px;}
+        .dbadge{display:inline-block;font-family:var(--dcu-ff-d);font-size:1.1rem;letter-spacing:2px;padding:2px 10px;border-radius:2px;margin:2px 3px;}
+        .dbadge.eb{background:var(--dcu-wild);color:#000;border:2px solid #000;}
+        .dbadge.cb{background:var(--dcu-red);color:var(--dcu-yellow);border:2px solid var(--dcu-yellow);}
+        .dres-dice{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1);}
+        .dw{display:flex;flex-direction:column;align-items:center;margin-bottom:3px;}
+        .dd{width:42px;height:42px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:var(--dcu-ff-d);font-size:1.4rem;border:2px solid rgba(255,255,255,.3);background:#1A3A8F;color:var(--dcu-white);animation:dcu-die .3s ease backwards;}
+        .dd.rs{background:#1a4d2e;border-color:#66dd66;color:#aaffaa;}
+        .dd.rf{background:#3d1010;border-color:rgba(255,80,80,.5);color:rgba(255,160,160,.8);}
+        .dd.wd{background:var(--dcu-wild);color:#000;border-color:#000;}
+        .dd.w6{background:#ff9900;box-shadow:0 0 10px rgba(255,153,0,.7);}
+        .dd.w1{background:var(--dcu-red);color:var(--dcu-yellow);border-color:var(--dcu-yellow);box-shadow:0 0 10px rgba(212,43,43,.7);}
+        .wchain{display:flex;flex-direction:row;gap:3px;align-items:center;}
+        .warrow{color:var(--dcu-wild);font-size:1rem;font-weight:700;line-height:42px;padding:0 2px;}
+        .dlbl{font-family:var(--dcu-ff-l);font-size:.55rem;letter-spacing:1px;font-weight:700;text-transform:uppercase;margin-top:2px;}
+        .dres-reroll{display:block;width:100%;margin-top:12px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.18);border-radius:4px;color:var(--dcu-white);font-family:var(--dcu-ff-l);font-size:.76rem;letter-spacing:2px;text-transform:uppercase;padding:8px;cursor:pointer;}
+        .dres-reroll:hover{background:rgba(255,255,255,.12);transform:none;box-shadow:none;}
+
+        #dcu-hist{position:fixed;bottom:0;left:0;right:0;background:var(--dcu-ink);border-top:3px solid var(--dcu-yellow);z-index:500;display:flex;align-items:stretch;max-height:46px;overflow:hidden;transition:max-height .3s;}
+        #dcu-hist.exp{max-height:190px;overflow-y:auto;}
+        .dh-tab{background:var(--dcu-yellow);color:var(--dcu-ink);font-family:var(--dcu-ff-l);font-size:.58rem;letter-spacing:2px;text-transform:uppercase;writing-mode:vertical-rl;padding:5px 4px;cursor:pointer;display:flex;align-items:center;user-select:none;flex-shrink:0;}
+        .dh-items{flex:1;display:flex;flex-wrap:wrap;gap:4px;padding:5px 7px;align-content:flex-start;overflow-y:auto;}
+        .dh-item{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:3px;padding:2px 7px;font-family:var(--dcu-ff-l);font-size:.63rem;letter-spacing:1px;color:rgba(255,255,255,.55);white-space:nowrap;}
+        .dh-item .dv{font-family:var(--dcu-ff-d);font-size:.9rem;color:var(--dcu-yellow);margin-left:3px;}
+        .dh-item.dx .dv{color:#ff9900;} .dh-item.dc .dv{color:var(--dcu-red);}
+        .dh-clr{background:none;border:none;color:rgba(255,80,80,.5);font-family:var(--dcu-ff-l);font-size:.58rem;letter-spacing:1px;text-transform:uppercase;cursor:pointer;padding:0 8px;align-self:center;flex-shrink:0;}
+
+        @media print {
+            .roll-btn,#dcu-roll-dialog,#dcu-result,#dcu-hist{display:none !important;}
+            body{padding-bottom:0 !important;}
+            .skill-item{grid-template-columns:1fr 60px !important;}
+            .skill-spec{grid-template-columns:1fr 60px 24px !important;}
+        }
+    </style>
+</head>
+<body>
+
+<!-- SAVE MODAL -->
+<div class="modal-overlay" id="saveModal">
+  <div class="modal-box">
+    <h2>💾 Save Character</h2>
+    <p>
+      <strong>On iPhone/iPad:</strong> Tap <strong>Copy to Clipboard</strong>, then paste into Notes or Files.<br>
+      <strong>On desktop:</strong> Click <strong>Download JSON</strong> to save a file.
+    </p>
+    <textarea class="json-area" id="saveJsonArea" readonly></textarea>
+    <div class="copy-ok" id="copyOk">✓ Copied to clipboard!</div>
+    <div class="modal-buttons">
+      <button class="btn-mgreen" onclick="copyJson()">📋 Copy to Clipboard</button>
+      <button class="btn-mblue"  onclick="downloadJson()">⬇️ Download JSON</button>
+      <button class="btn-mgray"  onclick="closeModal('saveModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOAD MODAL -->
+<div class="modal-overlay" id="loadModal">
+  <div class="modal-box">
+    <h2>📂 Load Character</h2>
+    <p>
+      <strong>On iPhone/iPad:</strong> Paste your saved JSON below and tap <strong>Load from Text</strong>.<br>
+      <strong>On desktop:</strong> Use <strong>Choose File</strong> to load a JSON file.
+    </p>
+    <textarea class="json-area" id="loadJsonArea" placeholder="Paste character JSON here..."></textarea>
+    <div class="modal-buttons">
+      <button class="btn-mblue"  onclick="loadFromText()">✅ Load from Text</button>
+      <button class="btn-mblue"  onclick="document.getElementById('fileInput').click()">📁 Choose File</button>
+      <button class="btn-mgray"  onclick="closeModal('loadModal')">Cancel</button>
+    </div>
+    <input type="file" id="fileInput" accept=".json" style="display:none" onchange="loadFromFile(event)">
+  </div>
+</div>
+
+<!-- PRINT MODAL -->
+<div class="modal-overlay" id="printModal">
+  <div class="modal-box">
+    <h2>🖨️ Print / Save as PDF</h2>
+    <div class="tip-box">
+      <p><strong>📱 iPhone / iPad (Safari):</strong></p>
+      <ol>
+        <li>Tap <strong>Print Sheet</strong> below</li>
+        <li>In the print preview, <strong>pinch outward</strong> on the page thumbnail</li>
+        <li>Tap the <strong>Share</strong> button (box with arrow)</li>
+        <li>Choose <strong>Save to Files</strong></li>
+      </ol>
+    </div>
+    <p>On desktop, choose <strong>Save as PDF</strong> in your browser's print destination.</p>
+    <div class="modal-buttons">
+      <button class="btn-save" onclick="closeModal('printModal'); window.print();">🖨️ Print Sheet</button>
+      <button class="btn-mgray" onclick="closeModal('printModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="header">
+    <h1>DC Universe RPG</h1>
+    <p>Character Sheet &nbsp;&middot;&nbsp; <span style="font-family:monospace;font-size:0.85em;color:#888;background:#f0f0f0;padding:2px 7px;border-radius:3px;">v2.0</span></p>
+  </div>
+
+  <!-- Basic Info -->
+  <div class="section">
+    <div class="section-title">Basic Information</div>
+    <div class="form-row">
+      <div class="form-group"><label>Name</label><input type="text" id="name" placeholder="Hero/Character Name"></div>
+      <div class="form-group"><label>Real Name</label><input type="text" id="real_name" placeholder="Civilian Identity"></div>
+      <div class="form-group"><label>Race</label><input type="text" id="race" placeholder="Human, Kryptonian, etc."></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Base of Operations</label><input type="text" id="base_of_operations" placeholder="Gotham City, Metropolis..."></div>
+      <div class="form-group"><label>Height</label><input type="text" id="height" placeholder="e.g., 6'2&quot;"></div>
+      <div class="form-group"><label>Weight</label><input type="text" id="weight" placeholder="e.g., 210 lbs"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Eyes</label><input type="text" id="eyes" placeholder="Eye Color"></div>
+      <div class="form-group"><label>Hair</label><input type="text" id="hair" placeholder="Hair Color"></div>
+      <div class="form-group"><label>Tech Level</label><input type="text" id="tech_level" class="stat-field" placeholder="0"></div>
+    </div>
+  </div>
+
+  <!-- Points -->
+  <div class="section">
+    <div class="section-title">Points &amp; Stats</div>
+    <div class="form-row">
+      <div class="form-group"><label>Character Points</label><input type="text" id="character_points" class="stat-field" placeholder="0"></div>
+      <div class="form-group"><label>Hero Points</label><input type="text" id="hero_points" class="stat-field" placeholder="0"></div>
+      <div class="form-group"><label>Villain Points</label><input type="text" id="villain_points" class="stat-field" placeholder="0"></div>
+    </div>
+  </div>
+
+  <!-- Body Points -->
+  <div class="section body-points-section" style="background:#fff9e6;border:3px solid #ff9800;">
+    <div class="section-title" style="background:#ff9800;">Body Points</div>
+    <div class="form-row" style="justify-content:center;">
+      <div class="form-group" style="max-width:250px;">
+        <label style="font-size:1.1em;">Current Body Points</label>
+        <input type="text" id="body_points_current" class="stat-field" placeholder="0" style="font-size:2em;padding:15px;border:2px solid #ff9800;">
+      </div>
+      <div class="form-group" style="max-width:250px;">
+        <label style="font-size:1.1em;">Maximum Body Points</label>
+        <input type="text" id="body_points_max" class="stat-field" placeholder="0" style="font-size:2em;padding:15px;border:2px solid #ff9800;">
+      </div>
+    </div>
+  </div>
+
+  <!-- Attributes & Skills -->
+  <div class="section">
+    <div class="section-title">Attributes &amp; Skills</div>
+    <div class="skills-grid">
+
+      <!-- REFLEXES -->
+      <div class="skill-category">
+        <div class="skill-item" style="margin-bottom:12px;border-bottom:2px solid #1e3c72;padding-bottom:10px;"><label style="font-weight:bold;font-size:1.05em;">REFLEXES</label><input type="text" id="attr_reflexes" placeholder="0"><button class="roll-btn" onclick="dcuOpen('REFLEXES','attr_reflexes')" title="Roll REFLEXES">&#x1F3B2;</button></div>
+        <div class="skill-block" data-skill-id="acrobatics"><div class="skill-item"><label>Acrobatics</label><input type="text" id="acrobatics" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Acrobatics','acrobatics')" title="Roll Acrobatics">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('acrobatics')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="athletics"><div class="skill-item"><label>Athletics</label><input type="text" id="athletics" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Athletics','athletics')" title="Roll Athletics">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('athletics')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="boating"><div class="skill-item"><label>Boating</label><input type="text" id="boating" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Boating','boating')" title="Roll Boating">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('boating')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="brawling"><div class="skill-item"><label>Brawling</label><input type="text" id="brawling" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Brawling','brawling')" title="Roll Brawling">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('brawling')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="climbing"><div class="skill-item"><label>Climbing</label><input type="text" id="climbing" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Climbing','climbing')" title="Roll Climbing">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('climbing')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="dodge"><div class="skill-item"><label>Dodge</label><input type="text" id="dodge" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Dodge','dodge')" title="Roll Dodge">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('dodge')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="driving"><div class="skill-item"><label>Driving</label><input type="text" id="driving" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Driving','driving')" title="Roll Driving">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('driving')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="escape_artist"><div class="skill-item"><label>Escape Artist</label><input type="text" id="escape_artist" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Escape Artist','escape_artist')" title="Roll Escape Artist">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('escape_artist')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="martial_arts"><div class="skill-item"><label>Martial Arts</label><input type="text" id="martial_arts" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Martial Arts','martial_arts')" title="Roll Martial Arts">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('martial_arts')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="melee_weapons"><div class="skill-item"><label>Melee Weapons</label><input type="text" id="melee_weapons" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Melee Weapons','melee_weapons')" title="Roll Melee Weapons">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('melee_weapons')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="pilot"><div class="skill-item"><label>Pilot</label><input type="text" id="pilot" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Pilot','pilot')" title="Roll Pilot">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('pilot')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="riding"><div class="skill-item"><label>Riding</label><input type="text" id="riding" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Riding','riding')" title="Roll Riding">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('riding')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="sneak"><div class="skill-item"><label>Sneak</label><input type="text" id="sneak" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Sneak','sneak')" title="Roll Sneak">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('sneak')">+ Specialization</button></div>
+      </div>
+
+      <!-- PHYSIQUE -->
+      <div class="skill-category">
+        <div class="skill-item" style="margin-bottom:12px;border-bottom:2px solid #1e3c72;padding-bottom:10px;"><label style="font-weight:bold;font-size:1.05em;">PHYSIQUE</label><input type="text" id="attr_physique" placeholder="0"><button class="roll-btn" onclick="dcuOpen('PHYSIQUE','attr_physique')" title="Roll PHYSIQUE">&#x1F3B2;</button></div>
+        <div class="skill-block" data-skill-id="flying"><div class="skill-item"><label>Flying</label><input type="text" id="flying" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Flying','flying')" title="Roll Flying">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('flying')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="leap"><div class="skill-item"><label>Leap</label><input type="text" id="leap" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Leap','leap')" title="Roll Leap">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('leap')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="lifting"><div class="skill-item"><label>Lifting</label><input type="text" id="lifting" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Lifting','lifting')" title="Roll Lifting">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('lifting')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="resistance"><div class="skill-item"><label>Resistance</label><input type="text" id="resistance" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Resistance','resistance')" title="Roll Resistance">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('resistance')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="running"><div class="skill-item"><label>Running</label><input type="text" id="running" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Running','running')" title="Roll Running">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('running')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="swimming"><div class="skill-item"><label>Swimming</label><input type="text" id="swimming" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Swimming','swimming')" title="Roll Swimming">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('swimming')">+ Specialization</button></div>
+      </div>
+
+      <!-- COORDINATION -->
+      <div class="skill-category">
+        <div class="skill-item" style="margin-bottom:12px;border-bottom:2px solid #1e3c72;padding-bottom:10px;"><label style="font-weight:bold;font-size:1.05em;">COORDINATION</label><input type="text" id="attr_coordination" placeholder="0"><button class="roll-btn" onclick="dcuOpen('COORDINATION','attr_coordination')" title="Roll COORDINATION">&#x1F3B2;</button></div>
+        <div class="skill-block" data-skill-id="catch"><div class="skill-item"><label>Catch</label><input type="text" id="catch" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Catch','catch')" title="Roll Catch">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('catch')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="lockpicking"><div class="skill-item"><label>Lockpicking</label><input type="text" id="lockpicking" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Lockpicking','lockpicking')" title="Roll Lockpicking">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('lockpicking')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="marksmanship"><div class="skill-item"><label>Marksmanship</label><input type="text" id="marksmanship" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Marksmanship','marksmanship')" title="Roll Marksmanship">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('marksmanship')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="missile_weapons"><div class="skill-item"><label>Missile Weapons</label><input type="text" id="missile_weapons" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Missile Weapons','missile_weapons')" title="Roll Missile Weapons">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('missile_weapons')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="sleight_of_hand"><div class="skill-item"><label>Sleight of Hand</label><input type="text" id="sleight_of_hand" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Sleight of Hand','sleight_of_hand')" title="Roll Sleight of Hand">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('sleight_of_hand')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="thievery"><div class="skill-item"><label>Thievery</label><input type="text" id="thievery" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Thievery','thievery')" title="Roll Thievery">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('thievery')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="thrown_weapons"><div class="skill-item"><label>Thrown Weapons</label><input type="text" id="thrown_weapons" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Thrown Weapons','thrown_weapons')" title="Roll Thrown Weapons">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('thrown_weapons')">+ Specialization</button></div>
+      </div>
+
+      <!-- PERCEPTION -->
+      <div class="skill-category">
+        <div class="skill-item" style="margin-bottom:12px;border-bottom:2px solid #1e3c72;padding-bottom:10px;"><label style="font-weight:bold;font-size:1.05em;">PERCEPTION</label><input type="text" id="attr_perception" placeholder="0"><button class="roll-btn" onclick="dcuOpen('PERCEPTION','attr_perception')" title="Roll PERCEPTION">&#x1F3B2;</button></div>
+        <div class="skill-block" data-skill-id="artist"><div class="skill-item"><label>Artist</label><input type="text" id="artist" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Artist','artist')" title="Roll Artist">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('artist')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="engineering"><div class="skill-item"><label>Engineering</label><input type="text" id="engineering" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Engineering','engineering')" title="Roll Engineering">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('engineering')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="hide"><div class="skill-item"><label>Hide</label><input type="text" id="hide" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Hide','hide')" title="Roll Hide">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('hide')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="invent"><div class="skill-item"><label>Invent</label><input type="text" id="invent" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Invent','invent')" title="Roll Invent">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('invent')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="know_how"><div class="skill-item"><label>Know-how</label><input type="text" id="know_how" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Know-how','know_how')" title="Roll Know-how">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('know_how')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="repair"><div class="skill-item"><label>Repair</label><input type="text" id="repair" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Repair','repair')" title="Roll Repair">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('repair')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="search"><div class="skill-item"><label>Search</label><input type="text" id="search" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Search','search')" title="Roll Search">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('search')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="shadowing"><div class="skill-item"><label>Shadowing</label><input type="text" id="shadowing" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Shadowing','shadowing')" title="Roll Shadowing">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('shadowing')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="streetwise"><div class="skill-item"><label>Streetwise</label><input type="text" id="streetwise" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Streetwise','streetwise')" title="Roll Streetwise">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('streetwise')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="surveillance"><div class="skill-item"><label>Surveillance</label><input type="text" id="surveillance" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Surveillance','surveillance')" title="Roll Surveillance">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('surveillance')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="survival"><div class="skill-item"><label>Survival</label><input type="text" id="survival" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Survival','survival')" title="Roll Survival">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('survival')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="tracking"><div class="skill-item"><label>Tracking</label><input type="text" id="tracking" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Tracking','tracking')" title="Roll Tracking">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('tracking')">+ Specialization</button></div>
+      </div>
+
+      <!-- KNOWLEDGE -->
+      <div class="skill-category">
+        <div class="skill-item" style="margin-bottom:12px;border-bottom:2px solid #1e3c72;padding-bottom:10px;"><label style="font-weight:bold;font-size:1.05em;">KNOWLEDGE</label><input type="text" id="attr_knowledge" placeholder="0"><button class="roll-btn" onclick="dcuOpen('KNOWLEDGE','attr_knowledge')" title="Roll KNOWLEDGE">&#x1F3B2;</button></div>
+        <div class="skill-block" data-skill-id="arcane_lore"><div class="skill-item"><label>Arcane Lore</label><input type="text" id="arcane_lore" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Arcane Lore','arcane_lore')" title="Roll Arcane Lore">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('arcane_lore')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="computer_ops"><div class="skill-item"><label>Computer Ops</label><input type="text" id="computer_ops" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Computer Ops','computer_ops')" title="Roll Computer Ops">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('computer_ops')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="criminology"><div class="skill-item"><label>Criminology</label><input type="text" id="criminology" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Criminology','criminology')" title="Roll Criminology">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('criminology')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="demolitions"><div class="skill-item"><label>Demolitions</label><input type="text" id="demolitions" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Demolitions','demolitions')" title="Roll Demolitions">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('demolitions')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="forgery"><div class="skill-item"><label>Forgery</label><input type="text" id="forgery" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Forgery','forgery')" title="Roll Forgery">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('forgery')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="languages"><div class="skill-item"><label>Languages</label><input type="text" id="languages" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Languages','languages')" title="Roll Languages">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('languages')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="medicine"><div class="skill-item"><label>Medicine</label><input type="text" id="medicine" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Medicine','medicine')" title="Roll Medicine">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('medicine')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="navigation"><div class="skill-item"><label>Navigation</label><input type="text" id="navigation" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Navigation','navigation')" title="Roll Navigation">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('navigation')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="research"><div class="skill-item"><label>Research</label><input type="text" id="research" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Research','research')" title="Roll Research">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('research')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="scholar"><div class="skill-item"><label>Scholar</label><input type="text" id="scholar" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Scholar','scholar')" title="Roll Scholar">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('scholar')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="science"><div class="skill-item"><label>Science</label><input type="text" id="science" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Science','science')" title="Roll Science">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('science')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="security"><div class="skill-item"><label>Security</label><input type="text" id="security" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Security','security')" title="Roll Security">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('security')">+ Specialization</button></div>
+      </div>
+
+      <!-- PRESENCE -->
+      <div class="skill-category">
+        <div class="skill-item" style="margin-bottom:12px;border-bottom:2px solid #1e3c72;padding-bottom:10px;"><label style="font-weight:bold;font-size:1.05em;">PRESENCE</label><input type="text" id="attr_presence" placeholder="0"><button class="roll-btn" onclick="dcuOpen('PRESENCE','attr_presence')" title="Roll PRESENCE">&#x1F3B2;</button></div>
+        <div class="skill-block" data-skill-id="animal_handling"><div class="skill-item"><label>Animal Handling</label><input type="text" id="animal_handling" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Animal Handling','animal_handling')" title="Roll Animal Handling">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('animal_handling')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="bluff"><div class="skill-item"><label>Bluff</label><input type="text" id="bluff" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Bluff','bluff')" title="Roll Bluff">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('bluff')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="charm"><div class="skill-item"><label>Charm</label><input type="text" id="charm" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Charm','charm')" title="Roll Charm">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('charm')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="command"><div class="skill-item"><label>Command</label><input type="text" id="command" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Command','command')" title="Roll Command">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('command')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="disguise"><div class="skill-item"><label>Disguise</label><input type="text" id="disguise" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Disguise','disguise')" title="Roll Disguise">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('disguise')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="interrogation"><div class="skill-item"><label>Interrogation</label><input type="text" id="interrogation" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Interrogation','interrogation')" title="Roll Interrogation">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('interrogation')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="intimidation"><div class="skill-item"><label>Intimidation</label><input type="text" id="intimidation" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Intimidation','intimidation')" title="Roll Intimidation">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('intimidation')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="persuasion"><div class="skill-item"><label>Persuasion</label><input type="text" id="persuasion" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Persuasion','persuasion')" title="Roll Persuasion">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('persuasion')">+ Specialization</button></div>
+        <div class="skill-block" data-skill-id="willpower"><div class="skill-item"><label>Willpower</label><input type="text" id="willpower" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Willpower','willpower')" title="Roll Willpower">&#x1F3B2;</button></div><div class="skill-specializations"></div><button class="add-spec-btn" onclick="addSpec('willpower')">+ Specialization</button></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Combat Stats -->
+  <div class="section">
+    <div class="section-title">Combat Stats</div>
+    <div class="combat-grid">
+      <div class="form-group"><label>P/L Bonus</label><input type="text" id="pl_bonus" class="stat-field" placeholder="0"></div>
+      <div class="form-group"><label>Phys. Mult.</label><input type="text" id="phys_mult" class="stat-field" placeholder="0"></div>
+      <div class="form-group"><label>BDV</label><input type="text" id="bdv" class="stat-field" placeholder="0"></div>
+      <div class="form-group"><label>PDV</label><input type="text" id="pdv" class="stat-field" placeholder="0"></div>
+      <div class="form-group"><label># of Attacks</label><input type="text" id="num_attacks" class="stat-field" placeholder="0"></div>
+      <div class="form-group"><label>Initiative</label><input type="text" id="initiative" class="stat-field" placeholder="0"></div>
+      <div class="form-group"><label>Speed</label><input type="text" id="speed" class="stat-field" placeholder="0"></div>
+      <div class="form-group"><label>Non-Combat Actions</label><input type="text" id="non_combat_actions" class="stat-field" placeholder="0"></div>
+      <div class="form-group"><label>Active Defense</label><input type="text" id="active_defense" class="stat-field" placeholder="0"></div>
+    </div>
+  </div>
+
+  <!-- Combat Maneuvers -->
+  <div class="section">
+    <div class="section-title">Combat Maneuvers</div>
+    <div class="combat-grid combat-maneuvers-grid">
+      <div class="skill-item"><label>Arm Pin</label><input type="text" id="arm_pin" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Arm Pin','arm_pin')" title="Roll Arm Pin">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Back Hand</label><input type="text" id="back_hand" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Back Hand','back_hand')" title="Roll Back Hand">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Bear Hug</label><input type="text" id="bear_hug" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Bear Hug','bear_hug')" title="Roll Bear Hug">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Blind Fighting</label><input type="text" id="blind_fighting" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Blind Fighting','blind_fighting')" title="Roll Blind Fighting">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Choke</label><input type="text" id="choke" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Choke','choke')" title="Roll Choke">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Clothesline</label><input type="text" id="clothesline" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Clothesline','clothesline')" title="Roll Clothesline">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Disarm</label><input type="text" id="disarm" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Disarm','disarm')" title="Roll Disarm">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Double Kick</label><input type="text" id="double_kick" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Double Kick','double_kick')" title="Roll Double Kick">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Flip</label><input type="text" id="flip" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Flip','flip')" title="Roll Flip">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Elbow</label><input type="text" id="elbow" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Elbow','elbow')" title="Roll Elbow">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Flying Kick</label><input type="text" id="flying_kick" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Flying Kick','flying_kick')" title="Roll Flying Kick">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Haymaker</label><input type="text" id="haymaker" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Haymaker','haymaker')" title="Roll Haymaker">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Headbutt</label><input type="text" id="headbutt" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Headbutt','headbutt')" title="Roll Headbutt">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Instant Stand</label><input type="text" id="instant_stand" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Instant Stand','instant_stand')" title="Roll Instant Stand">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Instant Stun</label><input type="text" id="instant_stun" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Instant Stun','instant_stun')" title="Roll Instant Stun">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Knockout</label><input type="text" id="knockout" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Knockout','knockout')" title="Roll Knockout">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Leg Sweep</label><input type="text" id="leg_sweep" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Leg Sweep','leg_sweep')" title="Roll Leg Sweep">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Lunge</label><input type="text" id="lunge" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Lunge','lunge')" title="Roll Lunge">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Pin</label><input type="text" id="pin" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Pin','pin')" title="Roll Pin">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Power Punch</label><input type="text" id="power_punch" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Power Punch','power_punch')" title="Roll Power Punch">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Slam</label><input type="text" id="slam" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Slam','slam')" title="Roll Slam">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Spin Attack</label><input type="text" id="spin_attack" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Spin Attack','spin_attack')" title="Roll Spin Attack">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Takeaway</label><input type="text" id="takeaway" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Takeaway','takeaway')" title="Roll Takeaway">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Throw</label><input type="text" id="throw" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Throw','throw')" title="Roll Throw">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Uppercut</label><input type="text" id="uppercut" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Uppercut','uppercut')" title="Roll Uppercut">&#x1F3B2;</button></div>
+      <div class="skill-item"><label>Weapon Parry</label><input type="text" id="weapon_parry" placeholder="0"><button class="roll-btn" onclick="dcuOpen('Weapon Parry','weapon_parry')" title="Roll Weapon Parry">&#x1F3B2;</button></div>
+    </div>
+  </div>
+
+  <!-- Powers -->
+  <div class="section">
+    <div class="section-title">Powers</div>
+    <table class="powers-table">
+      <thead><tr><th>Power Name</th><th>Die Code</th><th>Enhancements/Limitations</th><th>Managing Skill</th><th>Effects</th></tr></thead>
+      <tbody id="powers-tbody"></tbody>
+    </table>
+    <button class="add-power-btn" onclick="addPowerRow()" style="margin-top:10px;background:#28a745;color:white;padding:8px 20px;border:none;border-radius:4px;cursor:pointer;font-weight:bold;font-family:inherit;">+ Add Power</button>
+  </div>
+
+  <!-- Advantages & Disadvantages -->
+  <div class="section">
+    <div class="section-title">Advantages &amp; Disadvantages</div>
+    <div class="advdis-columns">
+      <div class="advdis-col advantages">
+        <h3>✅ Advantages</h3>
+        <div class="advdis-list" id="advantages-list"></div>
+        <button class="add-advdis-btn" onclick="addAdvDis('advantages')">+ Add Advantage</button>
+      </div>
+      <div class="advdis-col disadvantages">
+        <h3>⚠️ Disadvantages</h3>
+        <div class="advdis-list" id="disadvantages-list"></div>
+        <button class="add-advdis-btn" onclick="addAdvDis('disadvantages')">+ Add Disadvantage</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Combat Maneuver Reference -->
+  <div class="section">
+    <div class="section-title">Combat Maneuver Reference</div>
+    <div class="maneuver-ref-grid">
+
+      <div class="maneuver-card">
+        <h3>Arm Pin</h3>
+        <textarea id="ref_arm_pin">The hero grabs the target's arm and forces it around behind her, pinning it there. No called-shot modifier applies. After the first round, the hero does 1D damage (plus bonuses) for each round the arm is pinned, for every level of specialization beyond the first (+1D at +2D, +2D at +3D, etc.). The hero can also break the arm with a successful opposed Physique or lifting roll vs. the target's Physique or lifting. The hero may also attempt an opposed brawling or martial arts roll vs. the target's Reflexes to force the target to the ground while maintaining his hold on the arm. Breaking the arm and forcing the target down each count as separate actions.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Backhand</h3>
+        <textarea id="ref_backhand">The hero strikes her opponent with the back of her hand. For every level of this specialization, the hero receives a +1D bonus to her skill roll when attempting this maneuver.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Bear Hug</h3>
+        <textarea id="ref_bear_hug">The hero grabs her opponent in a massive hug and squeezes him tightly. With a successful tackle combat option (see Chapter 12), the hero may squeeze her opponent for 1D in damage for every level of specialization past the first, plus her Physique/lifting bonus only.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Blind Fighting</h3>
+        <textarea id="ref_blind_fighting">The hero with this move functions in near total darkness or under the effects of blindness as if he could see clearly. He reduces the blindness penalty by –1 for every die he has in the specialization, up to a maximum of –4 (for a blindness penalty of zero). Note that a blindfighting specialization at +2D does not add +2D to the brawling or martial arts skill — it allows the hero to attack in darkness with more accuracy than he could have otherwise.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Choke</h3>
+        <textarea id="ref_choke">With a successful attack, the hero squeezes the target's windpipe, stopping him from breathing. For every level of this specialization, the hero receives a +1D bonus to her skill roll when attempting this move. See the choke combat option in Chapter 12 for the effects of this maneuver.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Clothesline</h3>
+        <textarea id="ref_clothesline">The hero stretches out his arm suddenly, knocking his opponent to the ground. For every level of this specialization past the first, the hero receives a +1D bonus to his skill roll when attempting this maneuver.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Disarm</h3>
+        <textarea id="ref_disarm">The hero strikes at her opponent's wrist, forcing his hand to open and his weapon to drop, or she quickly and violently removes the weapon from his hand. For every level of this specialization, the hero receives a +1D bonus to her skill roll when attempting this move. If the attack is successful, the target suffers 1D in damage (regardless of whether the hero is using a skill or a power), plus any bonuses, and must spend the next round picking up his weapon if he can still reach it (and if he wants to use it). This maneuver constitutes a called shot and, as such, adds +3 to the difficulty of the attack.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Double Kick</h3>
+        <textarea id="ref_double_kick">The hero jumps into the air and kicks twice. This may be at one opponent or two, but both must be at Point Blank range. The hero must make a skill roll for each kick, but may add +1D to the skill rolls for each level of this specialization. Note that this maneuver counts as two actions.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Elbow</h3>
+        <textarea id="ref_elbow">With a successful attack, the hero slams her elbow into her opponent. For every level of this specialization, the hero receives a +1D bonus to her skill roll when attempting this move.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Flip</h3>
+        <textarea id="ref_flip">The hero reaches out, grabs his opponent's wrist, arm, leg, or other body part, and jerks violently, causing the opponent to fall to the ground. Every level of this specialization causes an extra +1D damage, and the opponent must spend the next round getting to her feet (if she can). Note that this maneuver constitutes a called shot and adds +3 to the difficulty of the attack.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Flying Kick</h3>
+        <textarea id="ref_flying_kick">The hero leaps at his target, thrusting his leg out before him. This move covers a lot of ground — the hero may strike from Short range if attacking on the same level, or Medium range if attacking from above — and adds +1D to the skill roll for every level of the specialization past the first. (Thus at +1D the hero can only cover more ground; at +2D the hero can strike at a greater distance and add a +1D to his roll.)</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Haymaker</h3>
+        <textarea id="ref_haymaker">The hero swings a roundhouse blow at her opponent. For every level of specialization, the hero receives a +1D bonus to her skill roll when using this maneuver.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Headbutt</h3>
+        <textarea id="ref_headbutt">The hero rams his head into his opponent, causing extra harm. For every level of this specialization past the first, the hero receives a +1D bonus to his damage. With a successful called shot to the head, the opponent must make a successful Difficult Physique roll or be stunned for 3D rounds. (This Physique roll does not count as an action.)</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Instant Stand</h3>
+        <textarea id="ref_instant_stand">If the hero is on the ground (due to a fall, throw, or other reason), she may get to her feet without it counting as an action.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Instant Stun</h3>
+        <textarea id="ref_instant_stun">The hero attacks his opponent with a decisive blow, leaving the opponent stunned. With a successful attack, instead of doing damage, the hero delivers a stunning blow (–2D for all actions) that lasts one round for every level of this specialization past the first. Thus at +1D the maneuver has no effect, but at +2D or greater it can be devastating.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Knockout</h3>
+        <textarea id="ref_knockout">The hero attempts to render his opponent unconscious with a single blow. For every level of this specialization, the hero receives a +1D bonus to her skill roll up to a maximum of +4D when attempting this move. See the knockout combat option in Chapter 12 for its effects.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Leg Sweep</h3>
+        <textarea id="ref_leg_sweep">The hero crouches down and spins around, whipping his leg into his target's leg, causing his target to fall to the ground. This maneuver gives a bonus +1D to the skill roll for every level of specialization. If the attack is successful, the target takes 1D in damage (regardless of whether the hero is using a skill or a power), plus any bonuses, and the target must spend the next action getting to her feet.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Lunge</h3>
+        <textarea id="ref_lunge">The hero makes a large step forward to attack his opponent at a greater range. The hero using this maneuver may attack opponents at Short range as if they were at Point Blank, and receives a +1D bonus to his skill roll for every level of specialization past the first when using this move. (At +1D the hero can attack at greater distance; at +2D the hero can close gaps more easily and add a +1D to his roll.)</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Pin</h3>
+        <textarea id="ref_pin">The hero grabs a part of her target (usually his collar), rams him into a nearby surface (wall, ground, door, or the like), and immobilizes him by putting weight on him or lifting him slightly off the ground (a Physique or lifting check, which does not count as an action, may be required for this). The target remains pinned until he is released or succeeds at an opposed Physique or lifting roll, which counts as an action. Each round the hero attempts to maintain the pin counts as an action. This maneuver does no damage after the first round unless the hero is putting a lot of weight on the target. For every level of specialization, the hero receives a +1D bonus to his skill roll when attempting to pin her opponent.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Power Punch</h3>
+        <textarea id="ref_power_punch">With this close combat option, the character can increase the amount of damage inflicted on his opponent. Characters may only use this option with brawling or martial arts attacks, but it can be used in conjunction with any extremity, with close combat maneuvers, or with Natural Weapons. The power punch requires concentration and energy, so it's tiresome to perform. Characters without Speed Manipulation or Speed Manipulation (superactions) can do a power punch once per round. For characters with Speed Manipulation, the power punch option costs a base of two actions for the first punch, and the number of actions doubles for each subsequent punch. The damage bonus replaces the character's normal Physique/lifting bonus only when using the power punch. Physique 1D–15D: (0.5 × Physique or lifting) + 3, rounded down. Physique 16D–26D: 0.75 × Physique or lifting, rounded down. Physique 27D+: Physique or lifting. (Metropolis Sourcebook, p.63–64)</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Slam</h3>
+        <textarea id="ref_slam">The hero picks up his opponent and slams him into the ground, a wall, a bus, or another obstacle. For every level of specialization, the hero receives a +1D to his skill roll when using this maneuver. The hero must be strong enough to pick his opponent up to use this maneuver.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Spin Attack</h3>
+        <textarea id="ref_spin_attack">The hero whirls himself around and swings out one or more of his limbs, connecting for massive amounts of damage. The hero receives a +1D bonus to damage for every level of this specialization, but each target counts as a separate action. Note: If the hero attempts to use this move more than twice in a single round, he must make a successful Difficult Physique roll (which doesn't count as an action) or fall to the floor dizzy and spend the next round getting to his feet.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Takeaway</h3>
+        <textarea id="ref_takeaway">The hero attempts to separate an opponent from their devices, gadgets, or wonders in the midst of combat. If the hero attempts this maneuver, the difficulty is increased by +3, but with a successful roll, the piece of equipment is removed from the opponent's possession. The difficulty may be increased for very small items, such as rings. (Metropolis Sourcebook, p.63–64)</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Throw</h3>
+        <textarea id="ref_throw">The hero grabs her target and throws him to the ground, through a wall, into a reservoir, or something similar. The hero receives a +1D bonus to her skill roll for every level of the specialization. See the "throwing a person" combat option in Chapter 12 for more details.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Uppercut</h3>
+        <textarea id="ref_uppercut">The hero connects with a massive upswinging blow. For every level of specialization, he receives a +1D bonus to his skill roll.</textarea>
+      </div>
+
+      <div class="maneuver-card">
+        <h3>Weapon Parry</h3>
+        <textarea id="ref_weapon_parry">This maneuver allows the hero to safely use her brawling or martial arts skill to deflect edged attacks. With a successful parry to handheld bladed weapons (swords, knives, daggers, spears, and so on) with her bare hands, the hero can reduce the damage done by –1D for every level of specialization beyond the first. Therefore, at +1D in the specialization there is no bonus, but at +2D and beyond the hero can do some amazing things.</textarea>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Background -->
+  <div class="section">
+    <div class="section-title">Background</div>
+    <div class="form-group">
+      <textarea id="background" rows="8" placeholder="Character background, origin story, personality, etc."></textarea>
+    </div>
+  </div>
+
+  <div class="buttons">
+    <button class="btn-save"  onclick="openModal('saveModal'); buildSaveJson()">💾 Save</button>
+    <button class="btn-load"  onclick="openModal('loadModal')">📂 Load</button>
+    <button class="btn-print" onclick="openModal('printModal')">🖨️ Print / PDF</button>
+    <button class="btn-clear" onclick="clearForm()">🗑️ Clear All</button>
+  </div>
+
+<!-- DCU DICE ROLLER OVERLAYS -->
+<div id="dcu-roll-dialog">
+  <div class="drd-box">
+    <div class="drd-head">
+      <div id="drd-title">ROLL</div>
+      <div class="drd-head-sub" id="drd-sub"></div>
+      <button class="drd-x" onclick="dcuClose()">&#x2715;</button>
+    </div>
+    <div class="drd-body">
+      <div class="drd-row">
+        <div class="drd-lbl">Dice Pool</div>
+        <div class="drd-stepper">
+          <button class="drd-sb" onclick="dcuAdj(-1)">&#x2212;</button>
+          <div class="drd-sn"><input class="drd-si" id="drd-dice" type="number" min="1" max="50" value="2" inputmode="numeric" oninput="dcuNet()"></div>
+          <button class="drd-sb" onclick="dcuAdj(1)">+</button>
+        </div>
+        <span style="font-family:var(--dcu-ff-l);font-size:.6rem;color:rgba(255,255,255,.3);margin-left:4px;">D6</span>
+      </div>
+      <div class="drd-sec">Modifiers</div>
+      <div class="drd-grid">
+        <div class="drd-cell"><label>Hero Points</label><input type="number" id="drd-hero" value="0" inputmode="numeric" oninput="dcuNet()"></div>
+        <div class="drd-cell"><label>Multi-Action Penalty</label><input type="number" id="drd-multi" value="0" inputmode="numeric" oninput="dcuNet()"></div>
+        <div class="drd-cell"><label>Bonus (other)</label><input type="number" id="drd-bonus" value="0" inputmode="numeric" oninput="dcuNet()"></div>
+        <div class="drd-cell"><label>Penalty (other)</label><input type="number" id="drd-penalty" value="0" inputmode="numeric" oninput="dcuNet()"></div>
+      </div>
+      <div class="drd-net">
+        <div class="drd-net-lbl">Net Modifier</div>
+        <div class="drd-net-val" id="drd-net">+0</div>
+      </div>
+      <button class="drd-roll" id="drd-rollbtn" onclick="dcuExec()">ROLL!</button>
+    </div>
+  </div>
+</div>
+<div id="dcu-result">
+  <div class="dres-box">
+    <div class="dres-head">
+      <div class="dres-title" id="dres-title">RESULT</div>
+      <div class="dres-sub" id="dres-sub"></div>
+      <button class="dres-x" onclick="dcuCloseRes()">&#x2715;</button>
+    </div>
+    <div class="dres-body">
+      <div class="dres-total">
+        <span class="dres-num" id="dres-num">0</span>
+        <div class="dres-lbl" id="dres-lbl">-</div>
+        <div class="dres-math" id="dres-math" style="display:none"></div>
+        <div id="dres-badges"></div>
+      </div>
+      <div class="dres-dice" id="dres-dice"></div>
+      <button class="dres-reroll" onclick="dcuReroll()">&#x21BA; Reroll Same</button>
+    </div>
+  </div>
+</div>
+<div id="dcu-hist">
+  <div class="dh-tab" onclick="document.getElementById('dcu-hist').classList.toggle('exp')">ROLL LOG</div>
+  <div class="dh-items" id="dh-items"><span style="font-family:var(--dcu-ff-l);font-size:.6rem;color:rgba(255,255,255,.2);padding:13px 6px;">No rolls yet</span></div>
+  <button class="dh-clr" onclick="dcuHistClear()">&#x2715; Clear</button>
+</div>
+
+</div>
+
+<script>
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+document.querySelectorAll('.modal-overlay').forEach(el =>
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('active'); })
+);
+
+// ── Escape HTML ───────────────────────────────────────────────────────────────
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── Advantages / Disadvantages ────────────────────────────────────────────────
+function addAdvDis(type, data) {
+  const list = document.getElementById(type + '-list');
+  const uid  = 'ad_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+  const isAdv = type === 'advantages';
+  const entry = document.createElement('div');
+  entry.className = 'advdis-entry ' + (isAdv ? 'advantage' : 'disadvantage');
+  entry.innerHTML =
+    '<div class="advdis-entry-top">' +
+      '<input class="advdis-name" type="text" placeholder="' + (isAdv ? 'Advantage' : 'Disadvantage') + ' name" value="' + esc(data && data.name) + '">' +
+      '<button class="advdis-toggle" onclick="toggleDesc(this,\'' + uid + '\')">+ Notes</button>' +
+      '<button class="advdis-remove" onclick="this.closest(\'.advdis-entry\').remove()" title="Remove">✕</button>' +
+    '</div>' +
+    '<div class="advdis-desc" id="' + uid + '">' +
+      '<textarea placeholder="Optional notes...">' + esc(data && data.desc) + '</textarea>' +
+    '</div>';
+  // auto-open if there's saved desc
+  if (data && data.desc) {
+    entry.querySelector('.advdis-desc').classList.add('open');
+    entry.querySelector('.advdis-toggle').textContent = '− Notes';
+  }
+  list.appendChild(entry);
+  // attach print proxy to the dynamically created textarea
+  const ta = entry.querySelector('.advdis-desc textarea');
+  if (ta) createProxy(ta);
+}
+
+function toggleDesc(btn, uid) {
+  const desc = document.getElementById(uid);
+  const open = desc.classList.toggle('open');
+  btn.textContent = open ? '− Notes' : '+ Notes';
+}
+
+// ── Skills ────────────────────────────────────────────────────────────────────
+function addSpec(skillId) {
+  const block = document.querySelector('.skill-block[data-skill-id="' + skillId + '"]');
+  if (!block) return;
+  const c = block.querySelector('.skill-specializations');
+  const d = document.createElement('div');
+  d.className = 'skill-spec';
+  d.innerHTML =
+    '<input type="text" data-spec="name"  placeholder="Specialization name" style="font-style:italic">' +
+    '<input type="text" data-spec="value" placeholder="Value" style="font-style:italic">' +
+    '<button class="remove-spec-btn" onclick="this.closest(\'.skill-spec\').remove()">✕</button>';
+  c.appendChild(d);
+}
+
+// ── Powers ────────────────────────────────────────────────────────────────────
+function addPowerRow() {
+  const r = document.getElementById('powers-tbody').insertRow();
+  r.innerHTML =
+    '<td><input type="text" placeholder="Power name"></td>' +
+    '<td><input type="text" placeholder="e.g., 8D"></td>' +
+    '<td><input type="text" placeholder="Enhancements/Limitations"></td>' +
+    '<td><input type="text" placeholder="Managing skill"></td>' +
+    '<td><input type="text" placeholder="Effects"></td>' +
+    '<td><button class="roll-btn" style="margin:0 auto;display:block;" onclick="dcuRollPower(this)">&#x1F3B2;</button></td>';
+}
+
+function initPowers() { for (let i=0;i<5;i++) addPowerRow(); }
+
+// ── Data collection ───────────────────────────────────────────────────────────
+function collect() {
+  const c = {};
+  document.querySelectorAll('input[id], textarea[id]').forEach(el => c[el.id] = el.value);
+
+  c.powers = Array.from(document.querySelectorAll('#powers-tbody tr')).map(row => {
+    const ins = row.querySelectorAll('input');
+    return ins.length >= 5 ? { name:ins[0].value, dieCode:ins[1].value, enhancements:ins[2].value, skill:ins[3].value, effects:ins[4].value } : null;
+  }).filter(Boolean);
+
+  c.specializations = {};
+  document.querySelectorAll('.skill-block[data-skill-id]').forEach(block => {
+    const id = block.getAttribute('data-skill-id');
+    const specs = Array.from(block.querySelectorAll('.skill-spec')).map(s => ({
+      name:  s.querySelector('[data-spec="name"]')?.value  || '',
+      value: s.querySelector('[data-spec="value"]')?.value || ''
+    }));
+    if (specs.length) c.specializations[id] = specs;
+  });
+
+  ['advantages','disadvantages'].forEach(type => {
+    c[type] = Array.from(document.querySelectorAll('#' + type + '-list .advdis-entry')).map(e => ({
+      name: e.querySelector('.advdis-name')?.value || '',
+      desc: e.querySelector('.advdis-desc textarea')?.value || ''
+    }));
+  });
+
+  return c;
+}
+
+function apply(c) {
+  // simple fields
+  for (const k in c) {
+    if (['powers','specializations','advantages','disadvantages'].includes(k)) continue;
+    const el = document.getElementById(k);
+    if (el) {
+      el.value = c[k];
+      // keep maneuver print proxy in sync
+      if (el.tagName === 'TEXTAREA') syncProxy(el);
+    }
+  }
+  // specializations
+  if (c.specializations) {
+    for (const id in c.specializations) {
+      const block = document.querySelector('.skill-block[data-skill-id="' + id + '"]');
+      if (!block) continue;
+      const cont = block.querySelector('.skill-specializations');
+      cont.innerHTML = '';
+      c.specializations[id].forEach(sp => {
+        addSpec(id);
+        const rows = cont.querySelectorAll('.skill-spec');
+        const last = rows[rows.length-1];
+        last.querySelector('[data-spec="name"]').value  = sp.name  || '';
+        last.querySelector('[data-spec="value"]').value = sp.value || '';
+      });
+    }
+  }
+  // powers
+  if (c.powers) {
+    document.getElementById('powers-tbody').innerHTML = '';
+    c.powers.forEach(p => {
+      const r = document.getElementById('powers-tbody').insertRow();
+      r.innerHTML =
+        '<td><input type="text" value="' + esc(p.name||'') + '"></td>' +
+        '<td><input type="text" value="' + esc(p.dieCode||'') + '"></td>' +
+        '<td><input type="text" value="' + esc(p.enhancements||'') + '"></td>' +
+        '<td><input type="text" value="' + esc(p.skill||'') + '"></td>' +
+        '<td><input type="text" value="' + esc(p.effects||'') + '"></td>' +
+        '<td><button class="roll-btn" style="margin:0 auto;display:block;" onclick="dcuRollPower(this)">&#x1F3B2;</button></td>';
+    });
+  }
+  // adv/dis
+  ['advantages','disadvantages'].forEach(type => {
+    document.getElementById(type + '-list').innerHTML = '';
+    (c[type] || []).forEach(item => addAdvDis(type, item));
+  });
+}
+
+// ── Save ──────────────────────────────────────────────────────────────────────
+function buildSaveJson() {
+  document.getElementById('saveJsonArea').value = JSON.stringify(collect(), null, 2);
+  document.getElementById('copyOk').style.display = 'none';
+}
+
+function copyJson() {
+  const area = document.getElementById('saveJsonArea');
+  const text = area.value;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(showCopyOk).catch(() => fallbackCopy(area));
+  } else { fallbackCopy(area); }
+}
+
+function fallbackCopy(area) {
+  area.select(); area.setSelectionRange(0, 99999);
+  try { document.execCommand('copy'); showCopyOk(); }
+  catch(e) { alert('Auto-copy failed. Long-press the text and choose Select All → Copy.'); }
+}
+
+function showCopyOk() {
+  const el = document.getElementById('copyOk');
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 2500);
+}
+
+function downloadJson() {
+  const json = document.getElementById('saveJsonArea').value;
+  const name = (document.getElementById('name')?.value || 'character').replace(/\s+/g,'_');
+  const a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+  a.download = name + '_sheet.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// ── Load ──────────────────────────────────────────────────────────────────────
+function loadFromText() {
+  const text = document.getElementById('loadJsonArea').value.trim();
+  if (!text) { alert('Paste your character JSON first.'); return; }
+  try { apply(JSON.parse(text)); closeModal('loadModal'); }
+  catch(e) { alert('Could not parse JSON:\n' + e.message); }
+}
+
+function loadFromFile(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => { try { apply(JSON.parse(ev.target.result)); closeModal('loadModal'); } catch(err) { alert('Error: ' + err.message); } };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ── Clear ─────────────────────────────────────────────────────────────────────
+function clearForm() {
+  if (!confirm('Clear all fields? This cannot be undone.')) return;
+  document.querySelectorAll('input[id], textarea[id]').forEach(el => el.value = '');
+  document.getElementById('powers-tbody').innerHTML = ''; initPowers();
+  document.querySelectorAll('.skill-specializations').forEach(el => el.innerHTML = '');
+  document.getElementById('advantages-list').innerHTML = '';
+  document.getElementById('disadvantages-list').innerHTML = '';
+}
+
+// ── Autosave ──────────────────────────────────────────────────────────────────
+setInterval(() => { try { localStorage.setItem('dcu_autosave', JSON.stringify(collect())); } catch(e) {} }, 30000);
+
+// ── Print proxies (all textareas expand to full content when printing) ─────────
+function createProxy(ta) {
+  if (ta.dataset.proxyAttached) return;
+  ta.dataset.proxyAttached = '1';
+  const proxy = document.createElement('div');
+  proxy.className = 'print-proxy';
+  proxy.textContent = ta.value;
+  ta.parentNode.insertBefore(proxy, ta.nextSibling);
+  ta.addEventListener('input', () => { proxy.textContent = ta.value; });
+  return proxy;
+}
+
+function initPrintProxies() {
+  // Attach to all textareas except modal JSON areas
+  document.querySelectorAll('textarea:not(.json-area)').forEach(createProxy);
+}
+
+// Called after dynamic content (adv/dis notes) is added to the DOM
+function syncProxy(ta) {
+  if (!ta) return;
+  if (!ta.dataset.proxyAttached) { createProxy(ta); return; }
+  const proxy = ta.nextSibling;
+  if (proxy && proxy.classList && proxy.classList.contains('print-proxy')) {
+    proxy.textContent = ta.value;
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+window.onload = () => {
+  initPowers();
+  initPrintProxies();
+  try {
+    const saved = localStorage.getItem('dcu_autosave');
+    if (!saved) return;
+    const c = JSON.parse(saved);
+    const hasData = Object.entries(c).some(([k,v]) => {
+      if (['powers','specializations','advantages','disadvantages'].includes(k)) return false;
+      return v && v !== '0';
+    }) || (c.advantages||[]).some(a=>a.name) || (c.disadvantages||[]).some(a=>a.name);
+    if (hasData && confirm('Found auto-saved data. Restore it?')) apply(c);
+  } catch(e) {}
+};
+
+// ════════════════════════════════════════════════════════
+//  DCU INTEGRATED DICE ROLLER  (v2.0)
+// ════════════════════════════════════════════════════════
+(function() {
+  var _name='', _dice=2, _mod=0, _hist=[];
+
+  function parseDie(s) {
+    if (!s) return 2;
+    var m = String(s).toUpperCase().match(/^(\d+)/);
+    var n = m ? parseInt(m[1],10) : NaN;
+    return (isNaN(n)||n<1) ? 2 : Math.min(n,50);
+  }
+
+  window.dcuOpen = function(label, fieldId) {
+    var el = document.getElementById(fieldId);
+    dcuOpenWith(label, parseDie(el ? el.value : '2'));
+  };
+
+  function dcuOpenWith(label, dice) {
+    _name=label; _dice=dice;
+    document.getElementById('drd-title').textContent = label.toUpperCase();
+    document.getElementById('drd-sub').textContent   = dice+'D6';
+    document.getElementById('drd-dice').value    = dice;
+    document.getElementById('drd-hero').value    = 0;
+    document.getElementById('drd-multi').value   = 0;
+    document.getElementById('drd-bonus').value   = 0;
+    document.getElementById('drd-penalty').value = 0;
+    dcuNet();
+    document.getElementById('dcu-roll-dialog').classList.add('open');
+  }
+
+  window.dcuClose    = function() { document.getElementById('dcu-roll-dialog').classList.remove('open'); };
+  window.dcuCloseRes = function() { document.getElementById('dcu-result').classList.remove('open'); };
+
+  window.dcuAdj = function(d) {
+    var inp = document.getElementById('drd-dice');
+    inp.value = Math.max(1, Math.min(50, (parseInt(inp.value)||2)+d));
+    document.getElementById('drd-sub').textContent = inp.value+'D6';
+    try { navigator.vibrate && navigator.vibrate(15); } catch(e) {}
+    dcuNet();
+  };
+
+  window.dcuNet = function() {
+    _dice = Math.max(1, Math.min(50, parseInt(document.getElementById('drd-dice').value)||2));
+    var hero    = parseInt(document.getElementById('drd-hero').value)    || 0;
+    var multi   = parseInt(document.getElementById('drd-multi').value)   || 0;
+    var bonus   = parseInt(document.getElementById('drd-bonus').value)   || 0;
+    var penalty = parseInt(document.getElementById('drd-penalty').value) || 0;
+    _mod = hero - multi + bonus - penalty;
+    var el = document.getElementById('drd-net');
+    el.textContent = (_mod>=0?'+':'')+_mod;
+    el.style.color = _mod>0?'#66dd66':_mod<0?'#ff6666':'var(--dcu-yellow)';
+  };
+
+  window.dcuExec = function() {
+    dcuNet();
+    var btn = document.getElementById('drd-rollbtn');
+    btn.classList.add('spinning');
+    setTimeout(function(){btn.classList.remove('spinning');},400);
+    try { navigator.vibrate && navigator.vibrate(40); } catch(e) {}
+    dcuClose();
+    var r = dcuEngine(_dice,_mod);
+    dcuShow(_name,r);
+    dcuHistAdd(_name,_dice,_mod,r);
+  };
+
+  window.dcuReroll = function() {
+    try { navigator.vibrate && navigator.vibrate(40); } catch(e) {}
+    var r = dcuEngine(_dice,_mod);
+    dcuShow(_name,r);
+    dcuHistAdd(_name,_dice,_mod,r);
+  };
+
+  window.dcuRollPower = function(btn) {
+    var row = btn.closest('tr');
+    var ins = row.querySelectorAll('input');
+    dcuOpenWith((ins[0]&&ins[0].value)||'Power', parseDie((ins[1]&&ins[1].value)||'2'));
+  };
+
+  window.dcuRollSpec = function(btn) {
+    var row = btn.closest('.skill-spec');
+    var n = row.querySelector('[data-spec="name"]').value  || 'Specialization';
+    var v = row.querySelector('[data-spec="value"]').value || '0';
+    dcuOpenWith(n, parseDie(v));
+  };
+
+  function d6() { return Math.floor(Math.random()*6)+1; }
+
+  function rollWild() {
+    var rolls=[], first=d6(); rolls.push(first);
+    if (first===1) return {rolls:rolls,s:0,isOne:true};
+    var s=first>=3?1:0;
+    if (first===6) {
+      var r; do { r=d6(); rolls.push(r); s++; if(r!==6){if(r<3)s--;break;} } while(true);
+    }
+    return {rolls:rolls,s:s,isOne:false};
+  }
+
+  function dcuEngine(nd,mod) {
+    var reg=[],rs=0;
+    for(var i=0;i<Math.max(0,nd-1);i++){var r=d6();reg.push(r);if(r>=3)rs++;}
+    var w=rollWild(), raw=rs+w.s+mod, cf=false, rm=false;
+    if(w.isOne){raw=Math.max(0,raw-1);rm=true;if(raw===0)cf=true;}
+    return {total:Math.max(0,raw),reg:reg,rs:rs,w:w,xp:w.rolls.length>1,cf:cf,rm:rm,mod:mod};
+  }
+
+  function mk(tag,cls){var el=document.createElement(tag);el.className=cls;return el;}
+
+  function dcuShow(name,r) {
+    document.getElementById('dres-title').textContent = name.toUpperCase();
+    document.getElementById('dres-sub').textContent   = r.total+(r.total===1?' success':' successes');
+    var ne=document.getElementById('dres-num');
+    ne.textContent=r.total;
+    ne.className='dres-num'+(r.xp?' xp':'')+(r.cf?' cf':'');
+    document.getElementById('dres-lbl').textContent = r.cf?'CRITICAL FAILURE':r.total>0?'SUCCESS':'FAILURE';
+    var me=document.getElementById('dres-math');
+    if(r.mod!==0){me.textContent='Dice: '+(r.rs+r.w.s)+'  Mod: '+(r.mod>0?'+':'')+r.mod;me.style.display='';}
+    else{me.style.display='none';}
+    var bd=document.getElementById('dres-badges');bd.innerHTML='';
+    function badge(cls,t){var s=mk('span','dbadge '+cls);s.textContent=t;bd.appendChild(s);}
+    if(r.xp)           badge('eb','\u26A1 WILD EXPLODED');
+    if(r.rm&&!r.cf)    badge('cb','\uD83D\uDCA5 WILD 1 \u2212 1 SUCCESS');
+    if(r.cf)           badge('cb','\u2620\uFE0F CRITICAL FAILURE');
+    var row=document.getElementById('dres-dice');row.innerHTML='';
+    r.reg.forEach(function(v,i){
+      var w=mk('div','dw'),d=mk('div','dd '+(v>=3?'rs':'rf'));
+      d.textContent=v;d.style.animationDelay=(i*.06)+'s';
+      var l=mk('div','dlbl');l.style.color=v>=3?'#66dd66':'rgba(255,100,100,.7)';l.textContent=v>=3?'\u2713':'\u2717';
+      w.appendChild(d);w.appendChild(l);row.appendChild(w);
+    });
+    var ww=mk('div','dw'),ch=mk('div','wchain');
+    r.w.rolls.forEach(function(v,i){
+      if(i>0){var a=mk('div','warrow');a.textContent='\u2192';ch.appendChild(a);}
+      var d=mk('div','dd wd');
+      if(v===6)d.classList.add('w6');
+      if(r.w.isOne&&i===0)d.classList.add('w1');
+      d.textContent=v;d.style.animationDelay=((r.reg.length+i)*.06)+'s';
+      ch.appendChild(d);
+    });
+    ww.appendChild(ch);
+    var wl=mk('div','dlbl');wl.style.color='var(--dcu-wild)';
+    wl.textContent=r.w.isOne?'Wild \u2717 \u22121':(r.w.s>0?'Wild \u2713\xD7'+r.w.s:'Wild \u2717');
+    ww.appendChild(wl);row.appendChild(ww);
+    if(r.mod!==0){
+      var mw=mk('div','dw'),mc=mk('div','');
+      mc.style.cssText='height:42px;padding:0 9px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:var(--dcu-ff-d);font-size:1.3rem;border:2px dashed rgba(255,255,255,.3);color:rgba(255,255,255,.7);animation:dcu-die .3s ease backwards;';
+      mc.style.animationDelay=((r.reg.length+r.w.rolls.length)*.06)+'s';
+      mc.textContent=(r.mod>0?'+':'')+r.mod;
+      var ml=mk('div','dlbl');ml.style.color='rgba(255,255,255,.4)';ml.textContent='Mod';
+      mw.appendChild(mc);mw.appendChild(ml);row.appendChild(mw);
+    }
+    document.getElementById('dcu-result').classList.add('open');
+  }
+
+  document.getElementById('dcu-roll-dialog').addEventListener('click',function(e){if(e.target===this)dcuClose();});
+  document.getElementById('dcu-result').addEventListener('click',function(e){if(e.target===this)dcuCloseRes();});
+
+  function dcuHistAdd(name,dice,mod,r){
+    _hist.unshift({name:name,dice:dice,mod:mod,total:r.total,xp:r.xp,cf:r.cf});
+    if(_hist.length>30)_hist.pop();
+    dcuHistRender();
+  }
+  function dcuHistRender(){
+    var el=document.getElementById('dh-items');el.innerHTML='';
+    if(!_hist.length){el.innerHTML='<span style="font-family:var(--dcu-ff-l);font-size:.6rem;color:rgba(255,255,255,.2);padding:13px 6px;">No rolls yet</span>';return;}
+    _hist.forEach(function(h){
+      var item=mk('div','dh-item'+(h.xp?' dx':'')+(h.cf?' dc':''));
+      var ms=h.mod!==0?(h.mod>0?'+':'')+h.mod:'';
+      item.innerHTML=h.name+' '+h.dice+'D'+ms+' \u2192 <span class="dv">'+h.total+'</span>';
+      el.appendChild(item);
+    });
+  }
+  window.dcuHistClear=function(){_hist=[];dcuHistRender();try{navigator.vibrate&&navigator.vibrate(15);}catch(e){}};
+
+  window.addEventListener('load',function(){
+    try{var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Bangers&family=Oswald:wght@400;600;700&display=swap';document.head.appendChild(l);}catch(e){}
+  });
+})();
+
+</script>
+</body>
+</html>
